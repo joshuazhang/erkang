@@ -22,7 +22,7 @@
 	<pick type="attr">
 		<field>href</field>
 	</pick>
-	<schedule type="detail" class="com.search.tuan800.lashou.Lashou">
+	<schedule type="detail" class="me.nuoyan.erkang.sample.Lashou">
 		<catch action="field" field="merchantName">
 			<filter>
 				<tagname>h3</tagname>
