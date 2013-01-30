@@ -174,9 +174,7 @@ public class Scheduler {
 	public static void doSchedule(ListSchedule schedule) throws ParserException, SecurityException, IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, FileNotFoundException {
 		String pageUrl = schedule.getEntry();
 		while (pageUrl != null && pageUrl.length() > 0) {
-			
-			//检查是否已经抓过
-			int cnt = checkIfDone(pageUrl, schedule.getProcessLogFile());
+			String prePageUrl = pageUrl;
 			
 			//下一页的链接
 			Parser parser = HTMLGetter.getHtmlParser(pageUrl, "UTF-8", null, "", "");
@@ -188,7 +186,8 @@ public class Scheduler {
 				pageUrl = schedule.getNextPage().getPrefix() + ((LinkTag)nextPageNodeList.elementAt(nextPageNodeList.size()-1)).getLink();
 				System.out.println("nextpage : " + pageUrl);
 			}
-			
+			//检查是否已经抓过
+			int cnt = checkIfDone(prePageUrl, schedule.getProcessLogFile());
 			//如果已经抓过这一页，继续抓下一页
 			if (cnt > 0) {
 				continue;
@@ -211,7 +210,7 @@ public class Scheduler {
 			PrintWriter logOS = null;
 			try {
 				logOS = new PrintWriter(new FileOutputStream(schedule.getProcessLogFile(), true));
-				logOS.append(pageUrl + "\n");
+				logOS.append(prePageUrl + "\n");
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 				throw e;
