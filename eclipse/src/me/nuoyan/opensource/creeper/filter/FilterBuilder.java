@@ -14,6 +14,7 @@ import org.htmlparser.filters.AndFilter;
 import org.htmlparser.filters.HasAttributeFilter;
 import org.htmlparser.filters.HasChildFilter;
 import org.htmlparser.filters.HasParentFilter;
+import org.htmlparser.filters.LinkRegexFilter;
 import org.htmlparser.filters.OrFilter;
 import org.htmlparser.filters.RegexFilter;
 import org.htmlparser.filters.TagNameFilter;
@@ -108,6 +109,8 @@ public class FilterBuilder {
 				}
 			}
 			return new RegexFilter(pattern, sint);
+		} else if ("linkregex".equals("name")) {
+			return new LinkRegexFilter(element.element("pattern").getText());
 		} else if ("tagname".equals(name)) {
 			return new TagNameFilter(element.getTextTrim());
 		}

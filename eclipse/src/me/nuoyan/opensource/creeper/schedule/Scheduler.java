@@ -20,9 +20,11 @@ import me.nuoyan.opensource.creeper.action.FieldAction;
 import me.nuoyan.opensource.creeper.action.HTMLGetter;
 import me.nuoyan.opensource.creeper.filter.FilterBuilder;
 import me.nuoyan.opensource.creeper.filter.ParseException;
+import me.nuoyan.opensource.creeper.persistence.DBConnection;
 import me.nuoyan.opensource.creeper.pick.AttrPick;
 import me.nuoyan.opensource.creeper.pick.Pick;
 import me.nuoyan.opensource.creeper.pick.Picker;
+import me.nuoyan.opensource.creeper.pick.RegexFindPick;
 import me.nuoyan.opensource.creeper.pick.TextPick;
 
 import org.dom4j.Document;
@@ -86,7 +88,7 @@ public class Scheduler {
 								schedule.getCatcher().setPick(pick);
 							}
 						}
-					} 
+					}
 //					else if (condition) {
 //						
 //					}
@@ -118,6 +120,15 @@ public class Scheduler {
 						}
 						detailSchedule.setCatchers(catchers);
 						detailSchedule.setClassName(element.attributeValue("class"));
+						
+						if (element.attributeValue("dburl")!=null && element.attributeValue("dburl").length() > 0) {
+							DBConnection connection = new DBConnection(element.attributeValue("driver")
+									, element.attributeValue("dburl")
+									, element.attributeValue("username"), element.attributeValue("password")
+									, element.attributeValue("tablename"));
+							detailSchedule.setDbConnection(connection);
+						}
+						
 						schedule.setDetailSchedule(detailSchedule);
 					} else {
 						System.out.println("wrong schedule type: " + element.attribute("type"));
@@ -165,13 +176,20 @@ public class Scheduler {
 		} else if ("text".equals(el.attributeValue("type"))) {
 			TextPick textpick = new TextPick();
 			pick = textpick;
+		} else if ("regexFindText".equals(el.attributeValue("type"))) {
+			RegexFindPick regexFindPick = new RegexFindPick();
+			regexFindPick.setPattern(el.attributeValue("pattern"));
+			pick = regexFindPick;
+		}
+		if (el.attributeValue("index") != null && el.attributeValue("index").length() > 0) {
+			pick.setIndex(Integer.valueOf(el.attributeValue("index")));
 		}
 		
 		return pick;
 	}
 	
 	
-	public static void doSchedule(ListSchedule schedule) throws ParserException, SecurityException, IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, FileNotFoundException {
+	public static void doSchedule(ListSchedule schedule) throws Exception {
 		String pageUrl = schedule.getEntry();
 		while (pageUrl != null && pageUrl.length() > 0) {
 			String prePageUrl = pageUrl;
@@ -203,19 +221,26 @@ public class Scheduler {
 			for (int i = 0; i < nodeList.size(); i++) {
 				Node node = nodeList.elementAt(i);
 				String target = Picker.pickAttr((TagNode)node, schedule.getCatcher().getPick());
+				if (!target.startsWith("http://")) {
+					target = schedule.getNextPage().getPrefix() + target;
+				}
 				//抓去详情
-				doScheduleDetail(schedule.getDetailSchedule(), target);
-			}
-			//记录这一页已经抓取完毕
-			PrintWriter logOS = null;
-			try {
-				logOS = new PrintWriter(new FileOutputStream(schedule.getProcessLogFile(), true));
-				logOS.append(prePageUrl + "\n");
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-				throw e;
-			} finally {
-				try {logOS.flush();logOS.close();} catch (Exception e2) {e2.printStackTrace();}
+				try {
+					doScheduleDetail(schedule.getDetailSchedule(), target);
+					//记录这一页已经抓取完毕
+					PrintWriter logOS = null;
+					try {
+						logOS = new PrintWriter(new FileOutputStream(schedule.getProcessLogFile(), true));
+						logOS.append(prePageUrl + "\n");
+					} catch (FileNotFoundException e) {
+						e.printStackTrace();
+						throw e;
+					} finally {
+						try {logOS.flush();logOS.close();} catch (Exception e2) {e2.printStackTrace();}
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 			
 		}
@@ -255,7 +280,7 @@ public class Scheduler {
 	}
 	
 	
-	public static Object doScheduleDetail(DetailSchedule detailSchedule, String url) throws ParserException, SecurityException, NoSuchMethodException, IllegalArgumentException, IllegalAccessException, InvocationTargetException {
+	public static Object doScheduleDetail(DetailSchedule detailSchedule, String url) throws Exception {
 		Object object = null;
 		try {
 			object = Class.forName(detailSchedule.getClassName()).newInstance();
@@ -268,6 +293,10 @@ public class Scheduler {
 			doCatch(parser, catcher, object);
 		}
 		System.out.println(object);
+		//如果配置了数据库，就持久化该对象
+		if (detailSchedule.getDbConnection() != null && detailSchedule.getDbConnection().getUrl() != null) {
+			detailSchedule.getDbConnection().persist(object);
+		}
 		return object;
 	}
 	
@@ -276,11 +305,14 @@ public class Scheduler {
 		NodeList nodeList = parser.extractAllNodesThatMatch(catcher.getNodeFilter());
 		if (catcher.getAction() instanceof FieldAction) {
 			FieldAction fieldAction = (FieldAction) catcher.getAction();
-			for (int i = 0; i < nodeList.size(); i++) {//其实只走一遍，因为整个页面只有一个属性值
-				Method setterMethod = object.getClass().getDeclaredMethod("set" + fieldAction.getFieldName().substring(0, 1).toUpperCase() + fieldAction.getFieldName().substring(1), String.class);
-				setterMethod.invoke(object, ((TagNode)nodeList.elementAt(i)).toHtml().replaceAll("<.*?>", ""));
-				break;//先按只有一个符合条件的node，以后增加list等。。。
-			}
+//			for (int i = 0; i < nodeList.size(); i++) {//其实只走一遍，因为整个页面只有一个属性值
+				if (nodeList.size() >= catcher.getPick().getIndex() + 1) {
+					Method setterMethod = object.getClass().getDeclaredMethod("set" + fieldAction.getFieldName().substring(0, 1).toUpperCase() + fieldAction.getFieldName().substring(1), String.class);
+//					setterMethod.invoke(object, ((TagNode)nodeList.elementAt(catcher.getPick().getIndex())).toHtml().replaceAll("<.*?>", ""));
+					setterMethod.invoke(object, Picker.pickAttr((TagNode)nodeList.elementAt(catcher.getPick().getIndex()), catcher.getPick()));
+				}
+//				break;//先按只有一个符合条件的node，以后增加list等。。。
+//			}
 		} else if (catcher.getAction() instanceof DownloadAction) {
 			DownloadAction downloadAction = (DownloadAction) catcher.getAction();
 			if (nodeList.size() == 0) {
