@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schedule type="list">
+	<sleeptime>1000</sleeptime>
+	<entry>http://meishi.qq.com/beijing/s/d110105-a1000016-l100091</entry>
+	<nextpage>
+		<prefix>http://meishi.qq.com</prefix>
+		<filter>
+			<hasattribute>
+				<attr>title</attr>
+				<value>下一页</value>
+			</hasattribute>
+		</filter>
+	</nextpage>
+	<!-- <processlogfile>/Users/joshuazhang/Documents/work/creeper/tuan/lifeqq-1-process.log</processlogfile> -->
+	<processlogfile>/home/dxadmin/lifeqq/process.log</processlogfile>
+	<filter>
+		<and>
+			<hasparent recursive="true">
+				<hasattribute>
+					<attr>class</attr>
+					<value>basic</value>
+				</hasattribute>
+			</hasparent>
+			<hasparent recursive="false">
+				<tagname>h4</tagname>
+			</hasparent>
+			<tagname>a</tagname>
+		</and>
+	</filter>
+	<pick type="attr">
+		<field>href</field>
+	</pick>
+	<schedule type="detail" class="com.search.lifeqq.LifeQQ"
+		driver="com.mysql.jdbc.Driver"
+		dburl="jdbc:mysql://192.168.10.207:3307/qqmeishiplace"
+		 username="dx" password="dxdxdx" tablename="place">
+		<catch action="field" field="merchantName">
+			<filter>
+				<and>
+					<hasparent>
+						<hasattribute>
+							<attr>class</attr>
+							<value>d_header</value>
+						</hasattribute>
+					</hasparent>
+					<tagname>h1</tagname>
+				</and>
+			</filter>
+			<pick type="text"/>
+		</catch>
+		<catch action="field" field="phone">
+			<filter>
+				<and>
+					<hasparent>
+						<hasattribute>
+							<attr>class</attr>
+							<value>basic</value>
+						</hasattribute>
+					</hasparent>
+					<tagname>p</tagname>
+				</and>
+			</filter>
+			<pick type="text" index="1"/>
+		</catch>
+		<catch action="field" field="address">
+			<filter>
+				<and>
+					<hasparent>
+						<hasattribute>
+							<attr>class</attr>
+							<value>basic</value>
+						</hasattribute>
+					</hasparent>
+					<tagname>p</tagname>
+				</and>
+			</filter>
+			<pick type="text" index="0"/>
+		</catch>
+		<catch action="field" field="city">
+			<filter>
+				<and>
+					<hasparent>
+						<hasattribute>
+							<attr>class</attr>
+							<value>current_city</value>
+						</hasattribute>
+					</hasparent>
+					<tagname>h3</tagname>
+				</and>
+			</filter>
+			<pick type="text"/>
+		</catch>
+		<catch action="field" field="lat">
+			<filter>
+				<tagname>script</tagname>
+			</filter>
+			<pick type="regexFindText" index="2" pattern="var sMapX = (.*?);"/>
+		</catch>
+		<catch action="field" field="lon">
+			<filter>
+				<tagname>script</tagname>
+			</filter>
+			<pick type="regexFindText" index="2" pattern="var sMapY = (.*?);"/>
+		</catch>
+	</schedule>
+</schedule>
