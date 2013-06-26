@@ -15,9 +15,12 @@ import java.util.Set;
 
 public class Downloader {
 	
-	public static void downloadFileToPath(String url, String fileName, String directory, HashMap<String, String> cookie, String referer, String userAgent) {
+	public static void downloadFileToPath(String url, String fileName,String filePrefix, String directory, HashMap<String, String> cookie, String referer, String userAgent) {
 		if (fileName == null || fileName.length() <= 0) {
 			fileName = getFileName(url);
+		}
+		if (filePrefix != null && filePrefix.length() > 0) {
+			fileName = filePrefix + fileName;
 		}
 		File dir = new File(directory);
 		if (!dir.exists()) {
@@ -77,7 +80,7 @@ public class Downloader {
 				
 				System.out.println("下载完成：" + fileName + " - " + url);
 				try {
-					Thread.sleep(1000L);
+//					Thread.sleep(1000L);//这里不sleep了
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -115,7 +118,11 @@ public class Downloader {
 	
 	public static String getFileName(String url) {
 		int i = url.lastIndexOf("/");
-		if (i < 0) {
+		int j = url.lastIndexOf(".");
+		if (i < 0 || j < i) {
+			if (url.endsWith("jpg/600")) {
+				return System.currentTimeMillis() + new Random().nextInt(999999) + ".jpg";
+			}
 			return System.currentTimeMillis() + new Random().nextInt(999999) + "";
 		} else {
 			return url.substring(i +1);
@@ -127,7 +134,7 @@ public class Downloader {
 //		Downloader.downloadFileToPath("http://p11.tuan800.net/deal/deal_image/0553/1469/normal/d7680b04-6c8a-42ad-8545-e3f70fe25ca9.jpg", 
 //				"test.jpg", "/Users/joshuazhang/Documents/work/creeper/", null, "tuan800.net", "");
 		
-		System.out.println(getFileName("http://p11.tuan800.net/deal/deal_image/0553/1469/normal/d7680b04-6c8a-42ad-8545-e3f70fe25ca9.jpg"));
+		System.out.println(getFileName("http://ptg.tc.qq.com/qtuanxq/0/20130304185427-53051347d6399453.jpg/600"));
 		
 	}
 	

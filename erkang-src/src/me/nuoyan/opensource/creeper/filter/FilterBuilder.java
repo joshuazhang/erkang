@@ -15,12 +15,13 @@ import org.htmlparser.filters.HasAttributeFilter;
 import org.htmlparser.filters.HasChildFilter;
 import org.htmlparser.filters.HasParentFilter;
 import org.htmlparser.filters.LinkRegexFilter;
+import org.htmlparser.filters.NotFilter;
 import org.htmlparser.filters.OrFilter;
 import org.htmlparser.filters.RegexFilter;
 import org.htmlparser.filters.TagNameFilter;
 
 /**
- * ��ȡxml�����ļ�������Filter�ڵ������
+ * 根据xml中配置的filter节点，生成htmlparser filter
  * @author joshuazhang
  *
  */
@@ -109,10 +110,13 @@ public class FilterBuilder {
 				}
 			}
 			return new RegexFilter(pattern, sint);
-		} else if ("linkregex".equals("name")) {
+		} else if ("linkregex".equals(name)) {
 			return new LinkRegexFilter(element.element("pattern").getText());
 		} else if ("tagname".equals(name)) {
 			return new TagNameFilter(element.getTextTrim());
+		} else if ("not".equals(name)) {
+			Element e = (Element) element.elements().get(0);
+			return new NotFilter(getNodeFilter(e));
 		}
 		return null;
 	}

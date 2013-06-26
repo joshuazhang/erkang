@@ -1,5 +1,10 @@
 package me.nuoyan.opensource.creeper.schedule;
 
+import java.util.HashMap;
+
+import me.nuoyan.opensource.creeper.catching.Catch;
+import me.nuoyan.opensource.creeper.paging.NextPage;
+
 
 public class ListSchedule {
 	
@@ -7,7 +12,7 @@ public class ListSchedule {
 	
 	private NextPage nextPage;
 	
-	private Catcher catcher = new Catcher();
+	private Catch catcher = new Catch();
 	
 	private String entry;
 	
@@ -47,11 +52,11 @@ public class ListSchedule {
 		this.detailSchedule = detailSchedule;
 	}
 
-	public Catcher getCatcher() {
+	public Catch getCatcher() {
 		return catcher;
 	}
 
-	public void setCatcher(Catcher catcher) {
+	public void setCatcher(Catch catcher) {
 		this.catcher = catcher;
 	}
 

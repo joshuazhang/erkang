@@ -1,31 +1,44 @@
 package me.nuoyan.opensource.creeper.schedule;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import me.nuoyan.opensource.creeper.persistence.DBConnection;
+import me.nuoyan.opensource.creeper.catching.Catch;
+import me.nuoyan.opensource.creeper.persistence.impl.DBPersist;
+import me.nuoyan.opensource.creeper.plugin.ErkangPlugin;
 
 
 public class DetailSchedule {
 	
-	private List<Catcher> catchers;
+	private List<Catch> catchers;
 	
 	private String className;
 	
-	private DBConnection dbConnection;
+	private DBPersist dbConnection;
+	
+	private List<ErkangPlugin> plugins = new ArrayList<ErkangPlugin>();
 
-	public DBConnection getDbConnection() {
+	public List<ErkangPlugin> getPlugins() {
+		return plugins;
+	}
+
+	public void setPlugins(List<ErkangPlugin> plugins) {
+		this.plugins = plugins;
+	}
+
+	public DBPersist getDbConnection() {
 		return dbConnection;
 	}
 
-	public void setDbConnection(DBConnection dbConnection) {
+	public void setDbConnection(DBPersist dbConnection) {
 		this.dbConnection = dbConnection;
 	}
 
-	public List<Catcher> getCatchers() {
+	public List<Catch> getCatchers() {
 		return catchers;
 	}
 
-	public void setCatchers(List<Catcher> catchers) {
+	public void setCatchers(List<Catch> catchers) {
 		this.catchers = catchers;
 	}
 
